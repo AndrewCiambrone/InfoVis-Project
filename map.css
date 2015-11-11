@@ -1,0 +1,125 @@
+path {
+  fill: none;
+  stroke: #000;
+  stroke-width: .15px;
+}
+
+.counties {
+	fill:none;
+}
+
+.states {
+	fill: none;
+	stroke: #fff;
+	stroke-linejoin: round;
+}
+
+.q0-9 { fill:rgb(247,251,255);}
+.q1-9 { fill:rgb(222,235,247); }
+.q2-9 { fill:rgb(198,219,239); }
+.q3-9 { fill:rgb(158,202,225); }
+.q4-9 { fill:rgb(107,174,214); }
+.q5-9 { fill:rgb(66,146,198); }
+.q6-9 { fill:rgb(33,113,181); }
+.q7-9 { fill:rgb(8,81,156); }
+.q8-9 { fill:rgb(8,48,107); }
+
+html, body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	overflow: hidden;
+
+}
+
+.content {
+
+	position: relative;
+	overflow: auto;
+	z-index: 0; 
+}
+
+.background {
+	position: absolute;
+	z-index: -1;
+	top: 0;
+	bottom: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.top_block {
+	width: 100%;
+	display: block; 
+}
+
+.bottom_block {
+	position: absolute;
+	width: 100%;
+	display: block;
+	bottom: 0; 
+}
+
+.left_block {
+	display: block;
+	float: left;
+	 
+}
+
+.right_block {
+	display: block;
+	float: right; 
+}
+
+.center_block {
+	display: block;
+	width: auto; 
+}
+
+.background.wrapper {
+
+	padding-bottom: 0;
+	left: 0;
+	right: 0;
+	background-color: #9966ff; 
+}
+
+.wrapper {
+	width: auto;
+
+	padding-bottom: 0px;
+}
+
+.background.Side {
+
+	padding-bottom: 0;
+	left: 0;
+	width: 20%;
+	background-color: #000000; 
+}
+
+.Side {
+	height: auto;
+	width: 20%;
+	padding-bottom: 0px;
+}
+
+.background.Page {
+
+	padding-bottom: 0;
+	right: 0;
+	width: 80%;
+	background-color: #FFFFFF; 
+}
+
+.Page {
+
+	width: 80%;
+	padding-bottom: 0px;
+}
+
+
+
+
+
+
