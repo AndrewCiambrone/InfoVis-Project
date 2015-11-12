@@ -3,23 +3,41 @@
 d3.select(window).on("resize", sizeChange);
 
 var margin = {top: -5, right: -5, bottom: -5, left: -5};
-var	width = 960 - margin.left - margin.right;
-var height = 500 - margin.top - margin.bottom;
+var	width = 385;
+var height = 225;
+var scale0 = 425;
 
 var rateById = d3.map();
 
 var quantize = d3.scale.quantize().domain([0, 100]).range(d3.range(9).map(function(i) { return "q"+i+"-9"}));
 
 var projection = d3.geo.albersUsa()
-      .scale(1000)
-      .translate([width/2, height/2]);
+
 
 var path = d3.geo.path().projection(projection);
 
 var map = null;
 
+var zoom = d3.behavior.zoom()
+    .translate([width / 2, height / 2])
+    .scale(scale0)
+    .scaleExtent([scale0, 8 * scale0])
+    .on("zoom", zoomed);
+
 var svg = d3.select("#map-content-wrapper").append("svg")
-    .attr("width", "100%")
+    .attr("width", width)
+    .attr("height", height)
+    .append("g");
+    
+var g = svg.append("g");
+
+svg.append("rect")
+    .attr("class", "background")
+    .attr("width", width)
+    .attr("height", height)
+
+svg.call(zoom)
+    .call(zoom.event);
 
 var educationData = d3.map();
 var healthData = d3.map();
@@ -28,6 +46,7 @@ var crimeData = d3.map();
 var costData = d3.map();
 var commuteData= d3.map();
 var unemploymentData = d3.map();
+var countyName = d3.map();
 
 queue()
   .defer(d3.json, "us.json")
@@ -37,7 +56,8 @@ queue()
   .defer(d3.csv, "Cost_of_Living_By_County.csv", function(d) { costData.set(d.FIPS, parseFloat(d.Score)); })
   .defer(d3.csv, "Health_new.csv", function(d) { healthData.set(d.FIPS, parseFloat(d.Score)); })
   .defer(d3.csv, "Income_By_County.csv", function(d) { incomeData.set(d.FIPS, parseFloat(d.Score)); })
-  .defer(d3.csv, "Crime_By_County.csv", function(d) { crimeData.set(d.FIPS, parseFloat(d.Score)); })
+  .defer(d3.csv, "Crime_By_County_new.csv", function(d) { crimeData.set(d.FIPS, parseFloat(d.Score)); })
+  .defer(d3.csv, "FIPS_CountyName.csv", function(d) { countyName.set(d.FIPS, d.Name)})
   .await(ready);
 
 function ready(error, us) {
@@ -49,25 +69,49 @@ function ready(error, us) {
 
 function drawMap() {
   svg.selectAll("*").remove();
-  svg.attr("width", "100%");
+  svg.attr("width", width)
+     .attr("height", height)
+     .append("g");
+
+  g = svg.append("g");
+
+  svg.append("rect")
+    .attr("class", "background")
+    .attr("width", width)
+    .attr("height", height)
+
+  svg.call(zoom)
+     .call(zoom.event);
   
-  svg.append("g")
-    .attr("class", "counties")
-    .selectAll("path")
-      .data(topojson.feature(map, map.objects.counties).features)
-    .enter().append("path")
-      .attr("class", function(d) { return quantize(rateById.get(d.id)); })
-      .attr("d", path);
-  sizeChange();
-  svg.append("path")
+  
+  g
+   .attr("class", "counties")
+   .selectAll("path")
+    .data(topojson.feature(map, map.objects.counties).features)
+   .enter().append("path")
+    .attr("class", function(d) { return quantize(rateById.get(d.id)); })
+    .attr("d", path)
+
+
+  g.append("path")
     .datum(topojson.mesh(map, map.objects.states, function(a, b) {return a !== b;}))
     .attr("class", "states")
     .attr("d", path);
 }
 
 function sizeChange() {
-  d3.select("g").attr("transform", "scale(" + $("#map-content-wrapper").width()/900 + ")");
-      $("svg").height($("#map-content-wrapper").width()*0.618);
+  //d3.select("g").attr("transform", "scale(" + $("#map-content-wrapper").width()/960 + ")");
+  //   $("svg").height($("#map-content-wrapper").width()*0.618);
+
+}
+
+function zoomed() {
+  projection
+      .translate(zoom.translate())
+      .scale(zoom.scale());
+
+  g.selectAll("path")
+      .attr("d", path);
 }
 
 function updateMap() {
@@ -80,6 +124,10 @@ function updateMap() {
   {
     var level = d3.map();
     var levelSize = weights[i].length;
+    if (weights[i][0].isButton)
+    {
+      break;
+    }
     for (var j=0; j<weights[i].length; j++)
     {
       // Welcome to the if stack from hell. 
@@ -90,15 +138,11 @@ function updateMap() {
           level = crimeData;
         }
         else
-        {
-          //Verify later. 
-          var keys = crimeData.keys();
-          var levelValues = level.values();
-          var crimeValues = crimeData.values();
-          for (k = 0; k < keys.length; k++)
+        { 
+          var crimeValues = crimeData.entries();
+          for (k = 0; k < crimeValues.length; k++)
           {
-            var id = keys[k];
-            level.set(id, levelValues[k] + crimeValues[k]);
+            level.set(crimeValues[k].key, (level.get(crimeValues[k].key) + crimeValues[k].value));
           }
         }
       } else {
@@ -110,13 +154,10 @@ function updateMap() {
           }
           else
           {
-            var keys = costData.keys();
-            var levelValues = level.values();
-            var costValues = costData.values();
-            for (k = 0; k < keys.length; k++)
+            var costValues = costData.entries();
+            for (k = 0; k < costValues.length; k++)
             {
-              var id = keys[k];
-              level.set(id, levelValues[k] + costValues[k]);
+              level.set(costValues[k].key, (level.get(costValues[k].key) + costValues[k].value));
             }
           }
         } else 
@@ -129,13 +170,10 @@ function updateMap() {
             }
             else
             {
-              var keys = educationData.keys();
-              var levelValues = level.values();
-              var educationValues = educationData.values();
-              for (k = 0; k < keys.length; k++)
+              var educationValues = educationData.entries();
+              for (k = 0; k < educationValues.length; k++)
               {
-                var id = keys[k];
-                level.set(id, levelValues[k] + educationValues[k]);
+                level.set(educationValues[k].key, (level.get(educationValues[k].key) + educationValues[k].value));
               }
             }
           } else {
@@ -147,13 +185,10 @@ function updateMap() {
               }
               else
               {
-                var keys = unemploymentData.keys();
-                var levelValues = level.values();
-                var unemploymentValues = unemploymentData.values();
-                for (k = 0; k < keys.length; k++)
+                var unemploymentValues = unemploymentData.entries();
+                for (k = 0; k < unemploymentValues.length; k++)
                 {
-                  var id = keys[k];
-                  level.set(id, levelValues[k] + unemploymentValues[k]);
+                  level.set(unemploymentValues[k].key, (level.get(unemploymentValues[k].key) + unemploymentValues[k].value));
                 }
               }
             } else {
@@ -165,13 +200,10 @@ function updateMap() {
                 }
                 else
                 {
-                  var keys = commuteData.keys();
-                  var levelValues = level.values();
-                  var incomeValues = incomeData.values();
-                  for (k = 0; k < keys.length; k++)
+                  var incomeValues = incomeData.entries();
+                  for (k = 0; k < incomeValues.length; k++)
                   {
-                    var id = keys[k];
-                    level.set(id, levelValues[k] + incomeValues[k]);
+                    level.set(incomeValues[k].key, (level.get(incomeValues[k].key) + incomeValues[k].value));
                   }
                 }
               } else {
@@ -183,13 +215,10 @@ function updateMap() {
                   }
                   else
                   {
-                    var keys = commuteData.keys();
-                    var levelValues = level.values();
-                    var commuteValues = commuteData.values();
-                    for (k = 0; k < keys.length; k++)
+                    var commuteValues = commuteData.entries();
+                    for (k = 0; k < commuteValues.length; k++)
                     {
-                      var id = keys[k];
-                      level.set(id, levelValues[k] + commuteValues[k]);
+                      level.set(commuteValues[k].key, (level.get(commuteValues[k].key) + commuteValues[k].value));
                     }
                   }
                 } else {
@@ -201,13 +230,10 @@ function updateMap() {
                     }
                     else
                     {
-                      var keys = healthData.keys();
-                      var levelValues = level.values();
-                      var healthValues = healthData.values();
-                      for (k = 0; k < keys.length; k++)
+                      var healthValues = healthData.entries();
+                      for (k = 0; k < healthValues.length; k++)
                       {
-                        var id = keys[k];
-                        level.set(id, levelValues[k] + healthValues[k]);
+                        level.set(healthValues[k].key, (level.get(healthValues[k].key) + healthValues[k].value));
                       }
                     }
                   }
@@ -217,7 +243,6 @@ function updateMap() {
           }
         }
       }
-
     }
 
     var levelE = level.entries();
@@ -227,7 +252,7 @@ function updateMap() {
       var v = (en.value/levelSize);
       if (numOfLevels > 1)
       {
-        v = v*(1/Math.pow(2, i)) 
+        v = v*(1/Math.pow(2, i+1)) 
       }
       if (temp.has(en.key))
       {
@@ -238,12 +263,18 @@ function updateMap() {
   }
 
   var tempE = temp.entries();
+  var maxV = d3.max(temp.values());
+  var minV = d3.min(temp.values());
+  var valueScale = d3.scale.linear().domain([minV,maxV]).range([1,100]);
   for (var t =0; t < tempE.length; t++)
   {
     var tp = tempE[t];
-    rateById.set(tp.key, tp.value/numOfLevels);
+    rateById.set(tp.key, valueScale(tp.value));
   }
 
-  //rateById = temp;
   drawMap();
 }
+
+
+d3.select(self.frameElement).style("height", height + "px");
+

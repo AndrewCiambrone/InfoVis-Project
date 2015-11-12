@@ -63,7 +63,7 @@ html, body {
 .left_block {
 	display: block;
 	float: left;
-	 
+	height: 100%;
 }
 
 .right_block {
@@ -118,6 +118,14 @@ html, body {
 	padding-bottom: 0px;
 }
 
+.background {
+  fill: none;
+  pointer-events: all;
+}
+
+.sphere {
+  fill: #fff;
+}
 
 
 

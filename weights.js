@@ -65,9 +65,9 @@ function init() {
 	bottomHeight = sectionHeight*0.2; //bottom gets 1/5
 	for (var i = 0; i<numDataSets; i++)
 	{
-		sections.push({top:{x:0,y:(i*sectionHeight), width:canvasWidth, height:topHeight},
-					   middle:{x:0,y:(i*sectionHeight + topHeight), width:canvasWidth, height:middleHeight},
-					   bottom:{x:0,y:(i*sectionHeight + topHeight + middleHeight), width:canvasWidth, height:bottomHeight}
+		sections.push({top:{x:0,y:(i*sectionHeight), width:canvasWidth + 75, height:topHeight},
+					   middle:{x:0,y:(i*sectionHeight + topHeight), width:canvasWidth + 75, height:middleHeight},
+					   bottom:{x:0,y:(i*sectionHeight + topHeight + middleHeight), width:canvasWidth + 75, height:bottomHeight}
 					  });
 	}
 
